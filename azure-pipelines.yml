@@ -1,41 +1,46 @@
 trigger:
   branches:
     include:
-      - main  # Adjust if your default branch is different (e.g., master)
+      - main  # or 'master' if your repo uses that
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
   buildConfiguration: 'Release'
-  # You can define additional variables here if needed for your pipeline.
 
 steps:
-  # Step 1: Checkout the repository
-  - task: Checkout@1  # Using Checkout version 1 to fix the task error
-    displayName: 'Checkout Repository'
 
-  # Step 2: Install Node.js (Using NodeTool task)
-  - task: UseNode@1
-    inputs:
-      versionSpec: '16.x'  # Adjust the version as needed
-    displayName: 'Install Node.js'
+# Step 1: Checkout the code
+- task: Checkout@1
+  displayName: 'Checkout Repository'
 
-  # Step 3: Install dependencies (Assuming npm is used)
-  - script: |
-      npm install
-    displayName: 'Install npm dependencies'
+# Step 2: Set up Python
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+    addToPath: true
+  displayName: 'Use Python 3.x'
 
-  # Step 4: Build the project (If applicable, e.g., if you need to build the front-end)
-  - script: |
-      npm run build
-    displayName: 'Build Project (if applicable)'
+# Step 3: Install dependencies
+- script: |
+    python -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+  displayName: 'Install Python Dependencies'
 
-  # Step 5: Publish build artifacts (optional)
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: $(Build.ArtifactStagingDirectory)  # Ensure this variable is available
-      ArtifactName: drop
-      publishLocation: Container
-    displayName: 'Publish Artifacts'
+# Step 4: Run the Flask app (optional - only if you want it running during build)
+# This will only run during pipeline build execution for testing
+- script: |
+    source venv/bin/activate
+    python app.py &
+    sleep 5
+  displayName: 'Run Flask App Temporarily (for testing)'
 
+# Step 5: Publish the artifacts (optional if you want to deploy it somewhere)
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.SourcesDirectory)'
+    ArtifactName: drop
+    publishLocation: Container
+  displayName: 'Publish Project Files'
