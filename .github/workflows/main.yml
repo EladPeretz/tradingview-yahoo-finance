@@ -1,32 +1,41 @@
-name: Flask App CI/CD
+name: Flask App with Ngrok
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  build:
+  serve:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install flask pyngrok
 
-      - name: Run tests
-        run: |
-          pytest
+    - name: Start Flask app in background
+      run: |
+        nohup python app.py &
+        sleep 5
 
-      - name: Start Flask app
-        run: |
-          nohup python app.py &
+    - name: Start ngrok tunnel
+      run: |
+        python -c "
+import time
+from pyngrok import ngrok
+url = ngrok.connect(5000)
+print(f'Public URL: {url}')
+# Keep the tunnel open for 15 minutes
+time.sleep(900)
+"
