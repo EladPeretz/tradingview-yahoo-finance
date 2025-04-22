@@ -1,32 +1,45 @@
-name: Python package setup
+name: Flask App CI/CD with Ngrok
 
 on:
   push:
     branches:
-      - main
+      - main  # Or specify your branch here
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      # Step 1: Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'  # Use a stable Python version like 3.9 or 3.10
+      # Step 2: Set up Python and install dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'  # Specify your Python version
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libxml2-dev libxslt-dev python3-dev build-essential
-        python -m pip install --upgrade pip setuptools wheel
-        pip install -r requirements.txt  # Install your Python dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Run tests (if any)
-      run: |
-        # If you have tests or any other commands to run
-        python -m unittest discover
+      # Step 3: Install ngrok
+      - name: Set up ngrok
+        run: |
+          curl -s https://ngrok.com/download | tar xvz -C /tmp
+          mv /tmp/ngrok* /usr/local/bin/ngrok
 
+      # Step 4: Start Flask app in the background
+      - name: Start Flask app
+        run: |
+          nohup python app.py &  # Start Flask app in the background
+          
+      # Step 5: Expose Flask app using ngrok
+      - name: Expose Flask app with ngrok
+        run: |
+          ngrok http 5000 > /dev/null &  # Expose Flask app on port 5000
+          sleep 5  # Wait for ngrok to establish the tunnel
+
+      # Step 6: Get ngrok public URL
