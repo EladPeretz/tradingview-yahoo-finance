@@ -8,6 +8,7 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
+  # You can define additional variables here if needed for your pipeline.
 
 steps:
   # Step 1: Checkout the repository
@@ -33,7 +34,8 @@ steps:
   # Step 5: Publish build artifacts (optional)
   - task: PublishBuildArtifacts@1
     inputs:
-      PathtoPublish: $(Build.ArtifactStagingDirectory)
+      PathtoPublish: $(Build.ArtifactStagingDirectory)  # Ensure this variable is available
       ArtifactName: drop
       publishLocation: Container
     displayName: 'Publish Artifacts'
+
