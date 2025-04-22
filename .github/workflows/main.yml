@@ -1,36 +1,32 @@
-name: Python Flask App
+name: Python package setup
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v2
       with:
-        python-version: '3.x'
-
-    - name: Install system dependencies (libxml2 and libxslt)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libxml2-dev libxslt-dev
+        python-version: '3.9'  # Use a stable Python version like 3.9 or 3.10
 
     - name: Install dependencies
       run: |
-        python -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
+        sudo apt-get update
+        sudo apt-get install -y libxml2-dev libxslt-dev python3-dev build-essential
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -r requirements.txt  # Install your Python dependencies
 
-    - name: Run Flask app (dev server)
+    - name: Run tests (if any)
       run: |
-        source venv/bin/activate
-        python app.py
+        # If you have tests or any other commands to run
+        python -m unittest discover
+
