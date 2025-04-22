@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - main  # Or 'master', depending on your default branch
+      - main  # Change to 'master' if your branch is called that
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -11,34 +11,25 @@ variables:
 
 steps:
 # Step 1: Checkout repository
-- task: Checkout@1
-  displayName: 'Checkout Source'
+- checkout: self
 
 # Step 2: Set up Python
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '$(pythonVersion)'
     addToPath: true
-  displayName: 'Set up Python $(pythonVersion)'
+  displayName: 'Set up Python'
 
-# Step 3: Create virtual environment & install dependencies
+# Step 3: Install dependencies
 - script: |
     python -m venv venv
     source venv/bin/activate
     pip install --upgrade pip
     pip install -r requirements.txt
-  displayName: 'Install Python dependencies'
+  displayName: 'Install dependencies'
 
-# Step 4: Run Flask app (for testing/deployment — optional step)
-# You can remove this block if you deploy elsewhere
+# Step 4: (Optional) Run Flask app - for local test
 - script: |
     source venv/bin/activate
     python app.py
-  displayName: 'Run Flask App'
-
-# Step 5: Publish build artifacts (optional)
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.SourcesDirectory)'
-    ArtifactName: 'source'
-    publishLocation: 'Container'
+  displayName: 'Run Flask app (dev)'
