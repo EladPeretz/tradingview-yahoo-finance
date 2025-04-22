@@ -1,34 +1,39 @@
 trigger:
   branches:
     include:
-      - main  # Or any other branch
+      - main  # Adjust if your default branch is different (e.g., master)
 
 pool:
-  vmImage: 'ubuntu-latest'  # Using an Ubuntu-based VM for the pipeline
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
 
 steps:
-- task: UsePythonVersion@0  # Use Python version
-  inputs:
-    versionSpec: '3.x'
-    addToPath: true
+  # Step 1: Checkout the repository
+  - task: Checkout@1  # Using Checkout version 1 to fix the task error
+    displayName: 'Checkout Repository'
 
-- task: PipInstall@0  # Install Python dependencies
-  inputs:
-    requirementsFile: 'requirements.txt'
+  # Step 2: Install Node.js (Using NodeTool task)
+  - task: UseNode@1
+    inputs:
+      versionSpec: '16.x'  # Adjust the version as needed
+    displayName: 'Install Node.js'
 
-- task: CopyFiles@2  # Copy project files
-  inputs:
-    SourceFolder: '$(Build.SourcesDirectory)'
-    Contents: '**/*'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+  # Step 3: Install dependencies (Assuming npm is used)
+  - script: |
+      npm install
+    displayName: 'Install npm dependencies'
 
-- task: PublishBuildArtifacts@1  # Publish artifacts to Azure DevOps
-  inputs:
-    pathToPublish: '$(Build.ArtifactStagingDirectory)'
-    artifactName: 'drop'
+  # Step 4: Build the project (If applicable, e.g., if you need to build the front-end)
+  - script: |
+      npm run build
+    displayName: 'Build Project (if applicable)'
 
-- task: AzureWebApp@1  # Deploy to Azure Web App
-  inputs:
-    appName: '<Your-Azure-WebApp-Name>'  # Replace with your app name
-    package: '$(Build.ArtifactStagingDirectory)/drop'
-
+  # Step 5: Publish build artifacts (optional)
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)
+      ArtifactName: drop
+      publishLocation: Container
+    displayName: 'Publish Artifacts'
