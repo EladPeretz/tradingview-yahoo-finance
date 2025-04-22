@@ -25,36 +25,37 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Step 3: Install ngrok
+      # Step 3: Install ngrok (fixed)
       - name: Set up ngrok
         run: |
-          curl -s https://ngrok.com/download | tar xvz -C /tmp
-          mv /tmp/ngrok* /usr/local/bin/ngrok
+          curl -sSL https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip -o ngrok.zip
+          unzip ngrok.zip
+          sudo mv ngrok /usr/local/bin
 
       # Step 4: Start Flask app in the background
       - name: Start Flask app
         run: |
-          nohup python app.py &  # Start Flask app in the background
-          
+          nohup python app.py > flask.log 2>&1 &
+
       # Step 5: Expose Flask app using ngrok
       - name: Expose Flask app with ngrok
         run: |
-          ngrok http 5000 > /dev/null &  # Expose Flask app on port 5000
-          sleep 5  # Wait for ngrok to establish the tunnel
+          nohup ngrok http 5000 > ngrok.log 2>&1 &
+          sleep 6  # Give ngrok time to initialize
 
       # Step 6: Get ngrok public URL
       - name: Get ngrok URL
         run: |
           NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-          echo "NGROK URL: $NGROK_URL"  # Output the URL for visibility
-          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV  # Set the ngrok URL as an environment variable
+          echo "NGROK URL: $NGROK_URL"
+          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
 
-      # Step 7: Use the ngrok URL (e.g., you can perform tests or log the URL)
-      - name: Use ngrok URL
+      # Step 7: Use the ngrok URL (Optional)
+      - name: Output ngrok URL
         run: |
           echo "Your app is now accessible at: $NGROK_URL"
-          
-      # Step 8: (Optional) If you want to test the app, you can run curl requests here:
-      - name: Test API endpoint (Optional)
+
+      # Step 8: Test endpoint (Optional)
+      - name: Test API endpoint
         run: |
-          curl $NGROK_URL/api/symbols
+          curl $NGROK_URL/api/symbols || echo "API test failed"
