@@ -1,46 +1,44 @@
 trigger:
   branches:
     include:
-      - main  # or 'master' if your repo uses that
+      - main  # Or 'master', depending on your default branch
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  buildConfiguration: 'Release'
+  pythonVersion: '3.10'
 
 steps:
-
-# Step 1: Checkout the code
+# Step 1: Checkout repository
 - task: Checkout@1
-  displayName: 'Checkout Repository'
+  displayName: 'Checkout Source'
 
 # Step 2: Set up Python
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '3.x'
+    versionSpec: '$(pythonVersion)'
     addToPath: true
-  displayName: 'Use Python 3.x'
+  displayName: 'Set up Python $(pythonVersion)'
 
-# Step 3: Install dependencies
+# Step 3: Create virtual environment & install dependencies
 - script: |
     python -m venv venv
     source venv/bin/activate
+    pip install --upgrade pip
     pip install -r requirements.txt
-  displayName: 'Install Python Dependencies'
+  displayName: 'Install Python dependencies'
 
-# Step 4: Run the Flask app (optional - only if you want it running during build)
-# This will only run during pipeline build execution for testing
+# Step 4: Run Flask app (for testing/deployment — optional step)
+# You can remove this block if you deploy elsewhere
 - script: |
     source venv/bin/activate
-    python app.py &
-    sleep 5
-  displayName: 'Run Flask App Temporarily (for testing)'
+    python app.py
+  displayName: 'Run Flask App'
 
-# Step 5: Publish the artifacts (optional if you want to deploy it somewhere)
+# Step 5: Publish build artifacts (optional)
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.SourcesDirectory)'
-    ArtifactName: drop
-    publishLocation: Container
-  displayName: 'Publish Project Files'
+    ArtifactName: 'source'
+    publishLocation: 'Container'
