@@ -1,35 +1,32 @@
-trigger:
-  branches:
-    include:
-      - main  # Change to 'master' if your branch is called that
+name: Python Flask App
 
-pool:
-  vmImage: 'ubuntu-latest'
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
-variables:
-  pythonVersion: '3.10'
+jobs:
+  build:
 
-steps:
-# Step 1: Checkout repository
-- checkout: self
+    runs-on: ubuntu-latest
 
-# Step 2: Set up Python
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(pythonVersion)'
-    addToPath: true
-  displayName: 'Set up Python'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-# Step 3: Install dependencies
-- script: |
-    python -m venv venv
-    source venv/bin/activate
-    pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
 
-# Step 4: (Optional) Run Flask app - for local test
-- script: |
-    source venv/bin/activate
-    python app.py
-  displayName: 'Run Flask app (dev)'
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Run Flask app (dev server)
+      run: |
+        source venv/bin/activate
+        python app.py
